@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BizGenius - Pricing</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --accent: #4cc9f0;
+      --dark: #212529;    
+      --light: #f8f9fa;
+      --success: #4bb543;
+      --warning: #f8961e;
+      --danger: #f94144;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      line-height: 1.6;
+      color: var(--dark);
+      background-color: #ffffff;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+      border: 2px solid var(--primary);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--secondary);
+      border-color: var(--secondary);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-secondary:hover {
+      background-color: rgba(67, 97, 238, 0.1);
+      transform: translateY(-2px);
+    }
+
+    section {
+      padding: 80px 0;
+    }
+
+    .section-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--dark);
+      text-align: center;
+    }
+
+    .section-subtitle {
+      font-size: 1.2rem;
+      color: #666;
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 50px;
+    }
+
+    header {
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      width: 100%;
+      z-index: 1000;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo i {
+      margin-right: 10px;
+      font-size: 2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+    }
+
+    .nav-links li {
+      margin-left: 30px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--dark);
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--dark);
+    }
+
+    footer {
+      background-color: var(--dark);
+      color: white;
+      padding: 60px 0 20px;
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .footer-column h3 {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      position: relative;
+      padding-bottom: 10px;
+    }
+
+    .footer-column h3::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 40px;
+      height: 2px;
+      background-color: var(--accent);
+    }
+
+    .footer-column ul {
+      list-style: none;
+    }
+
+    .footer-column ul li {
+      margin-bottom: 10px;
+    }
+
+    .footer-column ul li a {
+      color: #bbb;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-column ul li a:hover {
+      color: white;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 15px;
+    }
+
+    .social-links a {
+      color: white;
+      font-size: 1.2rem;
+      transition: color 0.3s ease;
+    }
+
+    .social-links a:hover {
+      color: var(--accent);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid #444;
+      color: #bbb;
+      font-size: 0.9rem;
+    }
+
+    /* Pricing Card Styles */
+    .pricing-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid transparent;
+    }
+
+    .pricing-card.popular {
+      border-color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    .pricing-card.popular::before {
+      content: 'MOST POPULAR';
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: var(--primary);
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transform: translateY(-50%) translateX(50%);
+      border-bottom-left-radius: 8px;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .pricing-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .pricing-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .pricing-price {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .pricing-period {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .pricing-features {
+      margin-bottom: 2rem;
+    }
+
+    .pricing-feature {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+      color: #555;
+    }
+
+    .pricing-feature i {
+      color: var(--success);
+      margin-right: 0.5rem;
+    }
+
+    .pricing-badge {
+      display: inline-block;
+      background: #e3f2fd;
+      color: var(--primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    /* FAQ Styles */
+    .faq-item {
+      border-bottom: 1px solid #eee;
+      padding: 1.5rem 0;
+    }
+
+    .faq-question {
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .faq-answer {
+      margin-top: 1rem;
+      color: #666;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .faq-item.active .faq-answer {
+      display: block;
+    }
+
+    /* Testimonial Styles */
+    .testimonial-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
+    .testimonial-text {
+      font-style: italic;
+      color: #555;
+      margin-bottom: 1rem;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+    }
+
+    .testimonial-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      margin-right: 1rem;
+    }
+
+    .author-info h4 {
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+
+    .author-info p {
+      color: #888;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Header -->
+  <header>
+    <div class="container mx-auto px-6">
+      <nav class="flex justify-between items-center">
+        <a href="index.html" class="logo flex items-center text-xl font-bold text-blue-600">
+          <i class="fas fa-brain mr-2"></i> BizGenius
+        </a>
+        <button id="mobileMenuBtn" class="md:hidden text-gray-700 text-2xl focus:outline-none">
+          <i class="fas fa-bars"></i>
+        </button>
+        <ul id="navLinks" class="hidden md:flex space-x-8">
+          <li><a href="index.html" class="text-gray-700 hover:text-blue-600 font-medium">Home</a></li>
+          <li><a href="#pricing" class="text-gray-700 hover:text-blue-600 font-medium">Pricing</a></li>
+          <li><a href="#testimonials" class="text-gray-700 hover:text-blue-600 font-medium">Testimonials</a></li>
+          <li><a href="contact.html" class="text-gray-700 hover:text-blue-600 font-medium">Contact</a></li>
+          <li><a href="AI-Advisor.html" class="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-blue-700 transition">Dashboard</a></li>
+        </ul>
+      </nav>
+
+      <!-- Mobile Menu -->
+      <ul id="mobileMenu" class="hidden mt-4 space-y-2 text-gray-700 text-lg">
+        <li><a href="index.html" class="block py-2 hover:text-blue-600">Home</a></li>
+        <li><a href="#pricing" class="block py-2 hover:text-blue-600">Pricing</a></li>
+        <li><a href="#testimonials" class="block py-2 hover:text-blue-600">Testimonials</a></li>
+        <li><a href="contact.html" class="block py-2 hover:text-blue-600">Contact</a></li>
+        <li><a href="AI-Advisor.html" class="block bg-blue-600 text-white text-center py-2 rounded-full text-sm font-semibold hover:bg-blue-700">Dashboard</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="pt-32 pb-20 bg-gradient-to-r from-blue-600 to-indigo-700 text-white text-center">
+    <div class="container mx-auto px-6">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">Choose Your Plan</h1>
+      <p class="text-lg md:text-xl mb-8 max-w-2xl mx-auto">Unlock unlimited AI business advice and grow your company with BizGenius.</p>
+      <div class="inline-flex bg-white bg-opacity-20 rounded-full p-1">
+        <button id="monthlyBtn" class="px-4 py-2 rounded-full bg-white text-blue-600 font-semibold">Monthly</button>
+        <button id="yearlyBtn" class="px-4 py-2 rounded-full hover:bg-white hover:bg-opacity-20 hover:text-white font-semibold">Yearly <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full ml-2">Save 20%</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="py-20">
+    <div class="container mx-auto px-6">
+      <h2 class="section-title">Simple, Transparent Pricing</h2>
+      <p class="section-subtitle">No hidden fees. Cancel anytime. 5-day free trial included with all plans.</p>
+
+      <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <!-- Starter Plan -->
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <div class="pricing-name">Starter</div>
+            <div class="pricing-price" id="starterPrice">$19</div>
+            <div class="pricing-period" id="starterPeriod">per month</div>
+          </div>
+          <div class="pricing-features">
+            <div class="pricing-feature"><i class="fas fa-check"></i> 5 AI Voice Calls per month</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Unlimited Text Chat</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Basic Business Analysis</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Wikipedia Research</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Export Chat History</div>
+            <div class="pricing-feature"><i class="fas fa-times text-red-500"></i> <span class="line-through">Advanced Financial Projections</span></div>
+            <div class="pricing-feature"><i class="fas fa-times text-red-500"></i> <span class="line-through">Priority Support</span></div>
+          </div>
+          <button class="btn btn-secondary w-full" onclick="selectPlan('starter')">Choose Starter</button>
+        </div>
+
+        <!-- Pro Plan (Popular) -->
+        <div class="pricing-card popular">
+          <div class="pricing-header">
+            <div class="pricing-name">Pro</div>
+            <div class="pricing-price" id="proPrice">$49</div>
+            <div class="pricing-period" id="proPeriod">per month</div>
+            <div class="pricing-badge">Recommended for Growing Businesses</div>
+          </div>
+          <div class="pricing-features">
+            <div class="pricing-feature"><i class="fas fa-check"></i> Unlimited AI Voice Calls</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Unlimited Text Chat</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Advanced Business Analysis</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Wikipedia + Market Research</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Export Chat History</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Advanced Financial Projections</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Priority Support</div>
+          </div>
+          <button class="btn btn-primary w-full" onclick="selectPlan('pro')">Choose Pro</button>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <div class="pricing-name">Enterprise</div>
+            <div class="pricing-price" id="enterprisePrice">$99</div>
+            <div class="pricing-period" id="enterprisePeriod">per month</div>
+          </div>
+          <div class="pricing-features">
+            <div class="pricing-feature"><i class="fas fa-check"></i> Unlimited AI Voice Calls</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Unlimited Text Chat</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Enterprise Business Analysis</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Advanced Market Research</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Export Chat History</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Advanced Financial Projections</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> 24/7 Priority Support</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> Custom AI Training</div>
+            <div class="pricing-feature"><i class="fas fa-check"></i> API Access</div>
+          </div>
+          <button class="btn btn-secondary w-full" onclick="selectPlan('enterprise')">Choose Enterprise</button>
+        </div>
+      </div>
+
+      <div class="text-center mt-12">
+        <p class="text-gray-600">All plans include a 5-day free trial. No credit card required to start.</p>
+        <p class="text-gray-600 mt-2">Need a custom plan? <a href="contact.html" class="text-blue-600 hover:underline">Contact us</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section id="testimonials" class="py-20 bg-gray-100">
+    <div class="container mx-auto px-6">
+      <h2 class="section-title">Trusted by Thousands of Businesses</h2>
+      <p class="section-subtitle">See what our customers say about BizGenius</p>
+
+      <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div class="testimonial-card">
+          <div class="testimonial-text">"BizGenius helped me identify a new revenue stream I hadn't considered. The AI's advice was spot-on and increased my profits by 30% in just two months!"</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">S</div>
+            <div class="author-info">
+              <h4>Sarah Chen</h4>
+              <p>Founder, TechStart Inc.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-text">"As a solopreneur, I don't have time for complex tools. BizGenius is simple, smart, and actually useful. The voice call feature feels like having a business coach on demand."</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">M</div>
+            <div class="author-info">
+              <h4>Marcus Johnson</h4>
+              <p>CEO, GrowthLabs</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-text">"The financial projections matched reality within 5%. I've recommended BizGenius to all my entrepreneur friends. It's worth every penny of the Pro plan."</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">P</div>
+            <div class="author-info">
+              <h4>Priya Nair</h4>
+              <p>Freelance Consultant</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="py-20">
+    <div class="container mx-auto px-6 max-w-4xl">
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <p class="section-subtitle">Everything you need to know about our plans</p>
+
+      <div class="space-y-4">
+        <div class="faq-item">
+          <div class="faq-question">
+            What happens after my 5-day free trial?
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            After your 5-day free trial, you'll need to choose a paid plan to continue using BizGenius. You can upgrade at any time during your trial. If you don't upgrade, your access will be limited until you subscribe.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            Can I cancel my subscription anytime?
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            Yes! You can cancel your subscription at any time with no penalties. Your access will continue until the end of your current billing period.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            What's included in the 5-day free trial?
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            During your 5-day free trial, you get full access to all features of the Pro plan, including unlimited text chat, 5 AI voice calls, advanced business analysis, and Wikipedia research. No credit card required to start.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            How does billing work?
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            We offer both monthly and yearly billing. With yearly billing, you save 20% compared to monthly payments. You'll be billed automatically at the start of each billing period. You can change or cancel your plan anytime.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            Is my data secure?
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            Absolutely. We use industry-standard encryption to protect your data. Your chat history and business information are never shared with third parties. We comply with GDPR and other privacy regulations.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            What if I need more features?
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            We're constantly adding new features based on user feedback. If you need something specific, please contact our support team. For enterprise customers, we offer custom AI training and API access.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 bg-blue-600 text-white text-center">
+    <div class="container mx-auto px-6">
+      <h2 class="text-3xl font-bold mb-4">Ready to Grow Your Business?</h2>
+      <p class="text-xl mb-8 max-w-2xl mx-auto">Join thousands of entrepreneurs who are making smarter decisions with BizGenius.</p>
+      <a href="#pricing" class="btn btn-primary bg-white text-blue-600 hover:bg-blue-100 px-8 py-4 text-lg">Choose Your Plan</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="container mx-auto px-6">
+      <div class="grid md:grid-cols-4 gap-8 mb-10">
+        <div>
+          <h3 class="text-xl font-bold flex items-center mb-4">
+            <i class="fas fa-brain mr-2"></i>
+            BizGenius
+          </h3>
+          <p class="text-gray-400">AI-powered business advisory platform helping entrepreneurs and business owners make data-driven decisions.</p>
+          <div class="flex space-x-4 mt-4">
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Product</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-white">Features</a></li>
+            <li><a href="#" class="hover:text-white">Pricing</a></li>
+            <li><a href="#" class="hover:text-white">Updates</a></li>
+            <li><a href="#" class="hover:text-white">Roadmap</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Company</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-white">About Us</a></li>
+            <li><a href="#" class="hover:text-white">Careers</a></li>
+            <li><a href="#" class="hover:text-white">Press</a></li>
+            <li><a href="#" class="hover:text-white">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Resources</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-white">Blog</a></li>
+            <li><a href="#" class="hover:text-white">Help Center</a></li>
+            <li><a href="#" class="hover:text-white">Tutorials</a></li>
+            <li><a href="#" class="hover:text-white">Community</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="text-center text-gray-500 text-sm pt-6 border-t border-gray-800">
+        &copy; 2025 BizGenius. All rights reserved. | <a href="#" class="hover:text-white">Privacy Policy</a> | <a href="#" class="hover:text-white">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Firebase Config -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCXQzFpqeGz_nO9aeGHNME7NWrR6xDtg44",
+      authDomain: "bizgenius-4365c.firebaseapp.com",
+      projectId: "bizgenius-4365c",
+      storageBucket: "bizgenius-4365c.firebasestorage.app",
+      messagingSenderId: "1022780720341",
+      appId: "1:1022780720341:web:573e50be5e89b2ed168e5c",
+      measurementId: "G-DKD3RGLQ46"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+  </script>
+
+  <!-- JavaScript -->
+  <script>
+    // Mobile Menu Toggle
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+      document.getElementById('mobileMenu').classList.toggle('hidden');
+    });
+
+    // FAQ Toggle
+    document.querySelectorAll('.faq-question').forEach(question => {
+      question.addEventListener('click', () => {
+        const faqItem = question.parentElement;
+        faqItem.classList.toggle('active');
+        const icon = question.querySelector('i');
+        icon.classList.toggle('fa-chevron-down');
+        icon.classList.toggle('fa-chevron-up');
+      });
+    });
+
+    // Pricing Toggle
+    let isYearly = false;
+    
+    document.getElementById('monthlyBtn').addEventListener('click', () => {
+      isYearly = false;
+      updatePricing();
+      document.getElementById('monthlyBtn').classList.add('bg-white', 'text-blue-600');
+      document.getElementById('monthlyBtn').classList.remove('hover:bg-white', 'hover:bg-opacity-20', 'hover:text-white');
+      document.getElementById('yearlyBtn').classList.remove('bg-white', 'text-blue-600');
+      document.getElementById('yearlyBtn').classList.add('hover:bg-white', 'hover:bg-opacity-20', 'hover:text-white');
+    });
+
+    document.getElementById('yearlyBtn').addEventListener('click', () => {
+      isYearly = true;
+      updatePricing();
+      document.getElementById('yearlyBtn').classList.add('bg-white', 'text-blue-600');
+      document.getElementById('yearlyBtn').classList.remove('hover:bg-white', 'hover:bg-opacity-20', 'hover:text-white');
+      document.getElementById('monthlyBtn').classList.remove('bg-white', 'text-blue-600');
+      document.getElementById('monthlyBtn').classList.add('hover:bg-white', 'hover:bg-opacity-20', 'hover:text-white');
+    });
+
+    function updatePricing() {
+      if (isYearly) {
+        document.getElementById('starterPrice').textContent = '$180';
+        document.getElementById('starterPeriod').textContent = 'per year (save $48)';
+        document.getElementById('proPrice').textContent = '$470';
+        document.getElementById('proPeriod').textContent = 'per year (save $118)';
+        document.getElementById('enterprisePrice').textContent = '$950';
+        document.getElementById('enterprisePeriod').textContent = 'per year (save $238)';
+      } else {
+        document.getElementById('starterPrice').textContent = '$19';
+        document.getElementById('starterPeriod').textContent = 'per month';
+        document.getElementById('proPrice').textContent = '$49';
+        document.getElementById('proPeriod').textContent = 'per month';
+        document.getElementById('enterprisePrice').textContent = '$99';
+        document.getElementById('enterprisePeriod').textContent = 'per month';
+      }
+    }
+
+    // Select Plan
+    function selectPlan(plan) {
+      // Check if user is logged in
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          // Redirect to checkout with plan parameter
+          window.location.href = `checkout.html?plan=${plan}&billing=${isYearly ? 'yearly' : 'monthly'}`;
+        } else {
+          // Redirect to signup page
+          if (confirm('You need to create an account to subscribe. Would you like to sign up now?')) {
+            window.location.href = 'signup.html';
+          }
+        }
+      });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set default to monthly
+      updatePricing();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BizGenius - Checkout</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --accent: #4cc9f0;
+      --dark: #212529;    
+      --light: #f8f9fa;
+      --success: #4bb543;
+      --warning: #f8961e;
+      --danger: #f94144;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      line-height: 1.6;
+      color: var(--dark);
+      background-color: #ffffff;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+      border: 2px solid var(--primary);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--secondary);
+      border-color: var(--secondary);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-secondary:hover {
+      background-color: rgba(67, 97, 238, 0.1);
+      transform: translateY(-2px);
+    }
+
+    section {
+      padding: 80px 0;
+    }
+
+    .section-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--dark);
+      text-align: center;
+    }
+
+    .section-subtitle {
+      font-size: 1.2rem;
+      color: #666;
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 50px;
+    }
+
+    header {
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      width: 100%;
+      z-index: 1000;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo i {
+      margin-right: 10px;
+      font-size: 2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+    }
+
+    .nav-links li {
+      margin-left: 30px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--dark);
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--dark);
+    }
+
+    footer {
+      background-color: var(--dark);
+      color: white;
+      padding: 60px 0 20px;
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .footer-column h3 {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      position: relative;
+      padding-bottom: 10px;
+    }
+
+    .footer-column h3::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 40px;
+      height: 2px;
+      background-color: var(--accent);
+    }
+
+    .footer-column ul {
+      list-style: none;
+    }
+
+    .footer-column ul li {
+      margin-bottom: 10px;
+    }
+
+    .footer-column ul li a {
+      color: #bbb;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-column ul li a:hover {
+      color: white;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 15px;
+    }
+
+    .social-links a {
+      color: white;
+      font-size: 1.2rem;
+      transition: color 0.3s ease;
+    }
+
+    .social-links a:hover {
+      color: var(--accent);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid #444;
+      color: #bbb;
+      font-size: 0.9rem;
+    }
+
+    /* Plan Card */
+    .plan-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      border: 2px solid var(--primary);
+    }
+
+    .plan-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .plan-name {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .plan-price {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .plan-period {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .feature-list {
+      margin-bottom: 2rem;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      color: #555;
+    }
+
+    .feature-item i {
+      color: var(--success);
+      margin-right: 0.5rem;
+    }
+
+    /* Paystack Badge */
+    .paystack-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .paystack-badge img {
+      height: 24px;
+      margin-right: 0.5rem;
+    }
+
+    .paystack-badge span {
+      font-size: 0.875rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Header -->
+  <header>
+    <div class="container mx-auto px-6">
+      <nav class="flex justify-between items-center">
+        <a href="index.html" class="logo flex items-center text-xl font-bold text-blue-600">
+          <i class="fas fa-brain mr-2"></i> BizGenius
+        </a>
+        <button id="mobileMenuBtn" class="md:hidden text-gray-700 text-2xl focus:outline-none">
+          <i class="fas fa-bars"></i>
+        </button>
+        <ul id="navLinks" class="hidden md:flex space-x-8">
+          <li><a href="index.html" class="text-gray-700 hover:text-blue-600 font-medium">Home</a></li>
+          <li><a href="pricing.html" class="text-gray-700 hover:text-blue-600 font-medium">Pricing</a></li>
+          <li><a href="contact.html" class="text-gray-700 hover:text-blue-600 font-medium">Contact</a></li>
+        </ul>
+      </nav>
+
+      <!-- Mobile Menu -->
+      <ul id="mobileMenu" class="hidden mt-4 space-y-2 text-gray-700 text-lg">
+        <li><a href="index.html" class="block py-2 hover:text-blue-600">Home</a></li>
+        <li><a href="pricing.html" class="block py-2 hover:text-blue-600">Pricing</a></li>
+        <li><a href="contact.html" class="block py-2 hover:text-blue-600">Contact</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="pt-32 pb-10 bg-gradient-to-r from-blue-600 to-indigo-700 text-white text-center">
+    <div class="container mx-auto px-6">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">Complete Your Purchase</h1>
+      <p class="text-lg md:text-xl mb-8 max-w-2xl mx-auto">Secure payment powered by Paystack. Your subscription starts immediately after payment.</p>
+    </div>
+  </section>
+
+  <!-- Checkout Section -->
+  <section class="py-12">
+    <div class="container mx-auto px-6 max-w-4xl">
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- Plan Summary -->
+        <div class="plan-card">
+          <div class="plan-header">
+            <div class="plan-name" id="planName">Pro</div>
+            <div class="plan-price" id="planPrice">$49</div>
+            <div class="plan-period" id="planPeriod">per month</div>
+          </div>
+          <div class="feature-list">
+            <div class="feature-item"><i class="fas fa-check"></i> Unlimited AI Voice Calls</div>
+            <div class="feature-item"><i class="fas fa-check"></i> Unlimited Text Chat</div>
+            <div class="feature-item"><i class="fas fa-check"></i> Advanced Business Analysis</div>
+            <div class="feature-item"><i class="fas fa-check"></i> Wikipedia + Market Research</div>
+            <div class="feature-item"><i class="fas fa-check"></i> Export Chat History</div>
+            <div class="feature-item"><i class="fas fa-check"></i> Advanced Financial Projections</div>
+            <div class="feature-item"><i class="fas fa-check"></i> Priority Support</div>
+          </div>
+          <div class="paystack-badge">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Paystack_logo.svg/240px-Paystack_logo.svg.png" alt="Paystack">
+            <span>Secured by Paystack — PCI DSS compliant</span>
+          </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="bg-white p-8 rounded-2xl shadow border border-gray-200">
+          <h2 class="text-2xl font-bold mb-6">Payment Details</h2>
+          <form id="paymentForm" class="space-y-6">
+            <div>
+              <label for="email" class="block mb-2 font-medium">Email Address</label>
+              <input type="email" id="email" required class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="you@example.com">
+            </div>
+            <div>
+              <label for="name" class="block mb-2 font-medium">Full Name</a></label>
+              <input type="text" id="name" required class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="John Doe">
+            </div>
+            <div>
+              <label class="block mb-2 font-medium">Billing Cycle</label>
+              <div class="flex space-x-4">
+                <label class="flex items-center">
+                  <input type="radio" name="billing" value="monthly" checked class="mr-2">
+                  <span>Monthly</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="radio" name="billing" value="yearly" class="mr-2">
+                  <span>Yearly (Save 20%)</span>
+                </label>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-full">
+              Pay Now <span id="payAmount">$49.00</span>
+            </button>
+            <p class="text-sm text-gray-500 text-center mt-4">
+              By clicking "Pay Now", you agree to our <a href="#" class="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a>.
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="container mx-auto px-6">
+      <div class="grid md:grid-cols-4 gap-8 mb-10">
+        <div>
+          <h3 class="text-xl font-bold flex items-center mb-4">
+            <i class="fas fa-brain mr-2"></i>
+            BizGenius
+          </h3>
+          <p class="text-gray-400">AI-powered business advisory platform helping entrepreneurs and business owners make data-driven decisions.</p>
+          <div class="flex space-x-4 mt-4">
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Product</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-white">Features</a></li>
+            <li><a href="#" class="hover:text-white">Pricing</a></li>
+            <li><a href="#" class="hover:text-white">Updates</a></li>
+            <li><a href="#" class="hover:text-white">Roadmap</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Company</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-white">About Us</a></li>
+            <li><a href="#" class="hover:text-white">Careers</a></li>
+            <li><a href="#" class="hover:text-white">Press</a></li>
+            <li><a href="#" class="hover:text-white">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-lg font-semibold mb-4">Resources</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-white">Blog</a></li>
+            <li><a href="#" class="hover:text-white">Help Center</a></li>
+            <li><a href="#" class="hover:text-white">Tutorials</a></li>
+            <li><a href="#" class="hover:text-white">Community</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="text-center text-gray-500 text-sm pt-6 border-t border-gray-800">
+        &copy; 2025 BizGenius. All rights reserved. | <a href="#" class="hover:text-white">Privacy Policy</a> | <a href="#" class="hover:text-white">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Firebase Config -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCXQzFpqeGz_nO9aeGHNME7NWrR6xDtg44",
+      authDomain: "bizgenius-4365c.firebaseapp.com",
+      projectId: "bizgenius-4365c",
+      storageBucket: "bizgenius-4365c.firebasestorage.app",
+      messagingSenderId: "1022780720341",
+      appId: "1:1022780720341:web:573e50be5e89b2ed168e5c",
+      measurementId: "G-DKD3RGLQ46"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+  </script>
+
+  <!-- JavaScript -->
+  <script>
+    // Mobile Menu Toggle
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+      document.getElementById('mobileMenu').classList.toggle('hidden');
+    });
+
+    // State
+    let selectedPlan = 'pro';
+    let isYearly = false;
+    let user = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check auth state
+      auth.onAuthStateChanged(currentUser => {
+        if (!currentUser) {
+          window.location.href = 'signup.html';
+          return;
+        }
+        user = currentUser;
+        loadPlanFromURL();
+        updateUI();
+      });
+
+      // Form submission
+      document.getElementById('paymentForm').addEventListener('submit', handlePayment);
+    });
+
+    // Load plan from URL
+    function loadPlanFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      selectedPlan = urlParams.get('plan') || 'pro';
+      isYearly = urlParams.get('billing') === 'yearly';
+    }
+
+    // Update UI based on plan
+    function updateUI() {
+      const planNameEl = document.getElementById('planName');
+      const planPriceEl = document.getElementById('planPrice');
+      const planPeriodEl = document.getElementById('planPeriod');
+      const payAmountEl = document.getElementById('payAmount');
+
+      // Set plan name
+      planNameEl.textContent = selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1);
+
+      // Set price and period
+      let price, period;
+      if (selectedPlan === 'starter') {
+        price = isYearly ? 180 : 19;
+        period = isYearly ? 'per year (save $48)' : 'per month';
+      } else if (selectedPlan === 'pro') {
+        price = isYearly ? 470 : 49;
+        period = isYearly ? 'per year (save $118)' : 'per month';
+      } else { // enterprise
+        price = isYearly ? 950 : 99;
+        period = isYearly ? 'per year (save $238)' : 'per month';
+      }
+
+      planPriceEl.textContent = `$${price}`;
+      planPeriodEl.textContent = period;
+      payAmountEl.textContent = `$${price}.00`;
+
+      // Update billing cycle radio buttons
+      document.querySelectorAll('input[name="billing"]').forEach(radio => {
+        radio.checked = radio.value === (isYearly ? 'yearly' : 'monthly');
+      });
+    }
+
+    // Handle payment
+    async function handlePayment(e) {
+      e.preventDefault();
+
+      if (!user) {
+        alert('Please log in to complete payment.');
+        window.location.href = 'signup.html';
+        return;
+      }
+
+      const email = document.getElementById('email').value;
+      const name = document.getElementById('name').value;
+      const billingCycle = document.querySelector('input[name="billing"]:checked').value;
+      isYearly = billingCycle === 'yearly';
+
+      // Calculate amount (in kobo for Paystack)
+      let amount;
+      if (selectedPlan === 'starter') {
+        amount = isYearly ? 18000 : 1900;
+      } else if (selectedPlan === 'pro') {
+        amount = isYearly ? 47000 : 4900;
+      } else { // enterprise
+        amount = isYearly ? 95000 : 9900;
+      }
+
+      // Initialize Paystack payment
+      const handler = PaystackPop.setup({
+        key: 'pk_test_3d63e4b5d7b3d5a4e8f9c7a6b2c1d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0', // Replace with your public key
+        email: email,
+        amount: amount * 100, // Convert to kobo
+        currency: 'NGN',
+        ref: 'BZG-' + Math.floor((Math.random() * 1000000000) + 1), // Generate unique reference
+        metadata: {
+          custom_fields: [
+            {
+              display_name: "Plan",
+              variable_name: "plan",
+              value: selectedPlan
+            },
+            {
+              display_name: "Billing Cycle",
+              variable_name: "billing_cycle",
+              value: billingCycle
+            }
+          ]
+        },
+        callback: async function(response) {
+          // Payment successful
+          try {
+            // Update user document in Firestore
+            await db.collection("users").doc(user.uid).update({
+              isSubscribed: true,
+              subscriptionPlan: selectedPlan,
+              billingCycle: billingCycle,
+              subscriptionStartDate: firebase.firestore.FieldValue.serverTimestamp(),
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Show success message
+            alert('Payment successful! Your subscription is now active.');
+            
+            // Redirect to dashboard
+            window.location.href = 'AI-Advisor.html';
+          } catch (error) {
+            console.error('Error updating user subscription:', error);
+            alert('Payment was successful but there was an error activating your subscription. Please contact support.');
+          }
+        },
+        onClose: function() {
+          alert('Payment window closed. Your subscription was not activated.');
+        }
+      });
+
+      // Open Paystack payment window
+      handler.openIframe();
+    }
+  </script>
+</body>
+</html>
