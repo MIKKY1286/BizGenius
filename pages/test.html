@@ -675,7 +675,7 @@
     <!-- Main Content Area -->
     <div class="main-content flex-1 flex flex-col relative">
       <!-- Mobile Menu Toggle Button -->
-      <button id="mobileMenuToggle" class="mobile-menu-toggle absolute top-4 left-4 z-50 md:hidden">
+      <button id="mobileMenuToggle" class="mobile-menu-toggle absolute top-4 left-2 z-50 md:hidden">
         <i class="fas fa-bars"></i>
       </button>
 
@@ -708,7 +708,7 @@
   </div>
 
   <!-- Call Window -->
-  <div id="callWindow" class="call-window">
+  <div id="callWindow" class="call-window" draggable="true">
     <!-- Draggable Header -->
     <div id="callWindowHeader" class="call-window-header">
       <i class="fas fa-grip-lines text-gray-500 dark:text-gray-400"></i>
@@ -725,7 +725,7 @@
       </div>
       <div class="text-center text-gray-600 dark:text-gray-300 mb-6">
         <i class="fas fa-microphone-alt text-4xl text-green-500 animate-pulse"></i>
-        <p class="mt-2">Listening... Speak naturally</p>
+        <p class="mt-2">Listening... </p>
       </div>
       <div class="flex justify-center">
         <button id="hangupBtn" class="call-btn hangup-btn">
@@ -749,10 +749,10 @@
     let currentChatId = null;
     let subscriptionLevel = 'free'; // 'free', 'starter', 'pro', 'enterprise'
 
-    // Function to make any element draggable
-    function makeElementDraggable(element) {
-      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
+    function makeElementDraggable(element, handle) {
+      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      
       function dragMouseDown(e) {
         e = e || window.event;
         e.preventDefault();
@@ -761,7 +761,7 @@
         document.onmouseup = closeDragElement;
         document.onmousemove = elementDrag;
       }
-
+      
       function elementDrag(e) {
         e = e || window.event;
         e.preventDefault();
@@ -772,14 +772,28 @@
         element.style.top = (element.offsetTop - pos2) + "px";
         element.style.left = (element.offsetLeft - pos1) + "px";
       }
-
+      
       function closeDragElement() {
         document.onmouseup = null;
         document.onmousemove = null;
       }
-
-      element.onmousedown = dragMouseDown;
+      
+      if (handle) {
+        handle.onmousedown = dragMouseDown;
+      } else {
+        element.onmousedown = dragMouseDown;
+      }
     }
+    
+
+    // Initialize draggable call window
+    makeElementDraggable(callWindow, callWindowHeader);
+    
+    // Set initial position
+    callWindow.style.top = 'auto';
+    callWindow.style.bottom = '20px';
+    callWindow.style.right = '20px';
+    callWindow.style.left = 'auto';
 
     // Function to show custom alert modal
     function showCustomAlert(title, message, iconClass = "fas fa-exclamation-triangle text-yellow-500") {
@@ -1580,7 +1594,7 @@
         badgeSpan.textContent = 'Starter';
       } else if (status === 'free-expired') {
         badgeSpan.classList.add('canceled');
-        badgeSpan.textContent = 'Trial Canceled';
+        badgeSpan.textContent = 'Trial ended';
       } else if (status === 'free-trial') {
         badgeSpan.classList.add('free');
         badgeSpan.textContent = 'Free Trial';
